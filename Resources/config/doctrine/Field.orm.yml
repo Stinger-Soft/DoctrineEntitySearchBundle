@@ -1,0 +1,19 @@
+StingerSoft\DoctrineEntitySearchBundle\Entity\Field:
+  type: entity
+  id:
+    id:
+      type: integer
+      generator: { strategy: AUTO }
+  fields:
+    fieldName: 
+      type: string
+      length: 512
+      nullable: false
+    fieldValue: 
+      type: text
+      nullable: false
+  manyToOne:
+    document:
+      targetEntity: StingerSoft\DoctrineEntitySearchBundle\Entity\Document
+      inversedBy: internalFields
+      fetch: EAGER

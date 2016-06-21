@@ -1,0 +1,21 @@
+StingerSoft\DoctrineEntitySearchBundle\Entity\Document:
+  type: entity
+  id:
+    id:
+      type: integer
+      generator: { strategy: AUTO }
+  fields:
+    entityClass: 
+      type: string
+      length: 512
+      nullable: false
+    entityId: 
+      type: string
+      length: 1024
+      nullable: false
+  oneToMany:
+    internalFields:
+      targetEntity: StingerSoft\DoctrineEntitySearchBundle\Entity\Field
+      mappedBy: document
+      fetch: EAGER
+      cascade: ['persist', 'remove', 'merge']
