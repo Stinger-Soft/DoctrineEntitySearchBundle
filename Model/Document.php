@@ -14,6 +14,9 @@ namespace StingerSoft\DoctrineEntitySearchBundle\Model;
 use StingerSoft\EntitySearchBundle\Model\Document as BaseDocument;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Backend independent document implementation
+ */
 abstract class Document implements BaseDocument {
 
 	protected $id;
@@ -160,13 +163,14 @@ abstract class Document implements BaseDocument {
 		$this->entityId = json_encode($entityId);
 		return $this;
 	}
-	
-	public function getInternalEntityId(){
+
+	public function getInternalEntityId() {
 		return $this->entityId;
 	}
 
 	/**
 	 * Creates a new field instance
+	 * 
 	 * @return Field
 	 */
 	protected abstract function newFieldInstance();
