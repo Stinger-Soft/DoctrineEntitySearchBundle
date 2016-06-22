@@ -120,6 +120,7 @@ class SearchService extends AbstractSearchService {
 				return stripos($word, $search) === 0;
 			}));
 		}
+		$suggestions = array_unique($suggestions);
 		return array_slice($suggestions, 0, $maxResults);
 	}
 

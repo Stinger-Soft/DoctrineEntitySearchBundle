@@ -83,9 +83,9 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFieldValue()
 	 */
-	public function getFieldValue($field) {
+	public function getFieldValue($fieldName) {
 		foreach($this->internalFields as $field) {
-			if($field->getFieldName() == $field) {
+			if($field->getFieldName() == $fieldName) {
 				return $field->getFieldValue();
 			}
 		}
@@ -170,7 +170,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 * Creates a new field instance
-	 * 
+	 *
 	 * @return Field
 	 */
 	protected abstract function newFieldInstance();
