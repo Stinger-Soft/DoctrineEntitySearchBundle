@@ -171,6 +171,16 @@ class SearchService extends AbstractSearchService {
 		foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
 			$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['fieldValue'], $facetResult['resultCount']);
 		}
+		
+		$facetQb = clone $qb;
+		$facetQb->select('doc.entityClass');
+		$facetQb->addSelect('COUNT(doc.id) as resultCount');
+		$facetQb->addGroupBy('doc.entityClass');
+		
+		foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
+			$facetSet->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
+		}
+		
 		$result->setFacets($facetSet);
 		return $result;
 	}

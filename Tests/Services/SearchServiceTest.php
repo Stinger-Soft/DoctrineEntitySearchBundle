@@ -139,6 +139,9 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$this->assertArrayHasKey('Haake Beck Kräusen', $titleFacets);
 		$this->assertEquals($titleFacets['Haake Beck'], 2);
 		$this->assertEquals($titleFacets['Haake Beck Kräusen'], 1);
+		$typeFacets = $facets->getFacet(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE);
+		$this->assertCount(1, $typeFacets);
+		
 	}
 
 	/**
