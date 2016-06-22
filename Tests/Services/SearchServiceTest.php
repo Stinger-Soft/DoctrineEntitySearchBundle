@@ -23,6 +23,7 @@ use StingerSoft\DoctrineEntitySearchBundle\Entity\Field;
 use Doctrine\ORM\Mapping\Driver\YamlDriver;
 use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
 use Doctrine\ORM\Mapping\Driver\SimplifiedYamlDriver;
+use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
 
 class SearchServiceTest extends AbstractORMTestCase {
 
@@ -119,13 +120,25 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$service = $this->getSearchService();
 		$this->indexBeer($service);
 		$this->indexBeer($service, 'Haake Beck');
+		$this->indexBeer($service, 'Haake Beck');
 		$this->indexBeer($service, 'Haake Beck Kräusen');
 		$query = $this->getMockBuilder(Query::class)->setMethods(array(
 			'getSearchTerm' 
-		))->getMock();
+		))->disableOriginalConstructor()->getMock();
 		$query->expects($this->once())->method('getSearchTerm')->will($this->returnValue('Beck'));
 		$result = $service->search($query);
-		$this->assertCount(2, $result->getResults());
+		$this->assertCount(3, $result->getResults());
+		
+		/**
+		 * @var FacetSetAdapter $facets
+		 */
+		$facets = $result->getFacets();
+		$titleFacets = $facets->getFacet(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TITLE);
+		$this->assertCount(2, $titleFacets);
+		$this->assertArrayHasKey('Haake Beck', $titleFacets);
+		$this->assertArrayHasKey('Haake Beck Kräusen', $titleFacets);
+		$this->assertEquals($titleFacets['Haake Beck'], 2);
+		$this->assertEquals($titleFacets['Haake Beck Kräusen'], 1);
 	}
 
 	/**
