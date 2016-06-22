@@ -166,6 +166,7 @@ class SearchService extends AbstractSearchService {
 		$facetQb->addSelect('COUNT(doc.id) as resultCount');
 		$facetQb->addGroupBy('field.fieldName');
 		$facetQb->addGroupBy('field.fieldValue');
+		$facetQb->orderBy('resultCount', 'DESC');
 		
 		$facetSet = new FacetSetAdapter();
 		foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
@@ -176,6 +177,7 @@ class SearchService extends AbstractSearchService {
 		$facetQb->select('doc.entityClass');
 		$facetQb->addSelect('COUNT(doc.id) as resultCount');
 		$facetQb->addGroupBy('doc.entityClass');
+		$facetQb->orderBy('resultCount', 'DESC');
 		
 		foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
 			$facetSet->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
