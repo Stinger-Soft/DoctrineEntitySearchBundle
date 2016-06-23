@@ -168,19 +168,28 @@ class SearchService extends AbstractSearchService {
 		$facetQb->addGroupBy('field.fieldValue');
 		$facetQb->orderBy('resultCount', 'DESC');
 		
-		$facetSet = new FacetSetAdapter();
-		foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-			$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['fieldValue'], $facetResult['resultCount']);
+		if($query->getUsedFacets() !== null){
+			$facetQb->andWhere('field.fieldName IN (:fields)');
+			$facetQb->setParameter('fields', $query->getUsedFacets());
 		}
 		
-		$facetQb = clone $qb;
-		$facetQb->select('doc.entityClass');
-		$facetQb->addSelect('COUNT(doc.id) as resultCount');
-		$facetQb->addGroupBy('doc.entityClass');
-		$facetQb->orderBy('resultCount', 'DESC');
+		$facetSet = new FacetSetAdapter();
+		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0){
+			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
+				$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['fieldValue'], $facetResult['resultCount']);
+			}
 		
-		foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-			$facetSet->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
+			if($query->getUsedFacets() === null || in_array('type', $query->getUsedFacets())){
+				$facetQb = clone $qb;
+				$facetQb->select('doc.entityClass');
+				$facetQb->addSelect('COUNT(doc.id) as resultCount');
+				$facetQb->addGroupBy('doc.entityClass');
+				$facetQb->orderBy('resultCount', 'DESC');
+				
+				foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
+					$facetSet->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
+				}
+			}
 		}
 		
 		$result->setFacets($facetSet);
