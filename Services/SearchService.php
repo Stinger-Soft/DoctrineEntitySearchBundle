@@ -157,7 +157,18 @@ class SearchService extends AbstractSearchService {
 		$qb->setParameter('term', '%' . $term . '%');
 		$qb->distinct();
 		
-		$result = new KnpResultSet($qb);
+		$facetedQb = clone $qb;
+		if($query->getFacets() !== null && count($query->getFacets()) > 0) {
+			foreach($query->getFacets() as $facetField => $facetValues) {
+				if($facetValues === null || count($facetValues) == 0)
+					continue;
+				$facetedQb->andWhere('field.fieldName = :' . $facetField . 'FacetFieldName AND field.fieldValue IN :' . $facetValues . 'FacetFieldValues');
+				$qb->setParameter($facetField . 'FacetFieldName', $facetField);
+				$qb->setParameter($facetField . 'FacetFieldValues', $facetValues);
+			}
+		}
+		
+		$result = new KnpResultSet($facetedQb);
 		$result->setContainer($this->container);
 		
 		$facetQb = clone $qb;
@@ -168,18 +179,18 @@ class SearchService extends AbstractSearchService {
 		$facetQb->addGroupBy('field.fieldValue');
 		$facetQb->orderBy('resultCount', 'DESC');
 		
-		if($query->getUsedFacets() !== null){
+		if($query->getUsedFacets() !== null) {
 			$facetQb->andWhere('field.fieldName IN (:fields)');
 			$facetQb->setParameter('fields', $query->getUsedFacets());
 		}
 		
 		$facetSet = new FacetSetAdapter();
-		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0){
+		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0) {
 			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
 				$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['fieldValue'], $facetResult['resultCount']);
 			}
-		
-			if($query->getUsedFacets() === null || in_array('type', $query->getUsedFacets())){
+			
+			if($query->getUsedFacets() === null || in_array('type', $query->getUsedFacets())) {
 				$facetQb = clone $qb;
 				$facetQb->select('doc.entityClass');
 				$facetQb->addSelect('COUNT(doc.id) as resultCount');
