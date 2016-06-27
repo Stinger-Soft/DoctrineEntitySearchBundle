@@ -72,7 +72,16 @@ abstract class Document implements BaseDocument {
 	public function getFields() {
 		$result = array();
 		foreach($this->internalFields as $field) {
-			$result[$field->getFieldName()] = $field->getFieldValue();
+			if(isset($result[$field->getFieldName()])) {
+				$oldValue = $result[$field->getFieldName()];
+				if(is_array($oldValue)) {
+					$result[$field->getFieldName()][] = $field->getFieldValue();
+				} else if(is_scalar($oldValue)) {
+					$result[$field->getFieldName()] = array($oldValue, $field->getFieldValue());
+				}
+			}else{
+				$result[$field->getFieldName()] = $field->getFieldValue();
+			}
 		}
 		return $result;
 	}
@@ -98,10 +107,10 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::addMultiValueField()
 	 */
-	public function addMultiValueField($field, $value) {
+	public function addMultiValueField($fieldName, $value) {
 		$field = $this->newFieldInstance();
 		$field->setFieldValue($value);
-		$field->setFieldName($field);
+		$field->setFieldName($fieldName);
 		$this->internalFields[] = $field;
 		$field->setDocument($this);
 	}

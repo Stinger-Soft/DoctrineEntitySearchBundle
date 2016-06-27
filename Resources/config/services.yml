@@ -1,0 +1,12 @@
+parameters:
+  stinger_soft.doctrine_entity_search.search_service.class: StingerSoft\DoctrineEntitySearchBundle\Services\SearchService
+  stinger_soft.doctrine_entity_search.document.class: StingerSoft\DoctrineEntitySearchBundle\Entity\Document
+  stinger_soft.doctrine_entity_search.field.class: StingerSoft\DoctrineEntitySearchBundle\Entity\Field
+
+  
+services:
+  stinger_soft.doctrine_entity_search.search_service:
+    class: '%stinger_soft.doctrine_entity_search.search_service.class%'
+    arguments:
+      - documentClazz: '%stinger_soft.doctrine_entity_search.document.class%'
+      - fieldClazz: '%stinger_soft.doctrine_entity_search.field.class%'
