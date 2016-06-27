@@ -176,6 +176,14 @@ abstract class Document implements BaseDocument {
 	public function getInternalEntityId() {
 		return $this->entityId;
 	}
+	
+	public function __get($name) {
+		return $this->getFieldValue($name);
+	}
+	
+	public function __isset($name) {
+		return $this->getFieldValue($name) !== null;
+	}
 
 	/**
 	 * Creates a new field instance

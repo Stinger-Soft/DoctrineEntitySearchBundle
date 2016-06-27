@@ -20,7 +20,7 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  * A Keen Metronic Admin Theme (http://www.keenthemes.com/) Bundle for Symfony2
  * with some additional libraries and PecPlatform specific customization.
  */
-class StingerSoftEntitySearchExtension extends Extension {
+class StingerSoftDoctrineEntitySearchExtension extends Extension {
 
 	/**
 	 *

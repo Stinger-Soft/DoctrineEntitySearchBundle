@@ -166,9 +166,12 @@ class SearchServiceTest extends AbstractORMTestCase {
 			realpath(__DIR__.'/../../Resources/config/doctrine/') => 'StingerSoft\DoctrineEntitySearchBundle\Entity',
 		);
 		
-		
 		$yamlDriver = new SimplifiedYamlDriver($namespaces);
 		$driver->addDriver($yamlDriver, 'StingerSoft\DoctrineEntitySearchBundle');
 		return $driver;
+	}
+	
+	protected function getPaths(){
+		return array(realpath(__DIR__.'/../../Entity'));
 	}
 }

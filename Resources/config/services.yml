@@ -8,5 +8,5 @@ services:
   stinger_soft.doctrine_entity_search.search_service:
     class: '%stinger_soft.doctrine_entity_search.search_service.class%'
     arguments:
-      - documentClazz: '%stinger_soft.doctrine_entity_search.document.class%'
-      - fieldClazz: '%stinger_soft.doctrine_entity_search.field.class%'
+      - '%stinger_soft.doctrine_entity_search.document.class%'
+      - '%stinger_soft.doctrine_entity_search.field.class%'

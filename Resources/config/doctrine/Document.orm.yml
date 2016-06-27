@@ -1,5 +1,10 @@
 StingerSoft\DoctrineEntitySearchBundle\Entity\Document:
   type: entity
+  inheritanceType: SINGLE_TABLE
+  discriminatorColumn:
+    name: discr
+    type: string
+    length: 255
   id:
     id:
       type: integer

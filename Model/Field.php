@@ -17,7 +17,9 @@ abstract class Field {
 
 	protected $fieldName;
 
-	protected $fieldValue;
+	protected $internalFieldValue;
+	
+	protected $serialized;
 	
 	/**
 	 * @var Document
@@ -38,11 +40,17 @@ abstract class Field {
 	}
 
 	public function getFieldValue() {
-		return $this->fieldValue;
+		return $this->serialized ? unserialize($this->internalFieldValue) : $this->internalFieldValue;
 	}
 
 	public function setFieldValue($fieldValue) {
-		$this->fieldValue = $fieldValue;
+		if(is_scalar($fieldValue)){
+			$this->internalFieldValue = $fieldValue;
+			$this->serialized = false;
+		}else{
+			$this->internalFieldValue = serialize($fieldValue);
+			$this->serialized = true;
+		}
 		return $this;
 	}
 
@@ -54,5 +62,16 @@ abstract class Field {
 		$this->document = $document;
 		return $this;
 	}
+
+	public function getSerialized() {
+		return $this->serialized;
+	}
+
+	public function setSerialized($serialized) {
+		$this->serialized = $serialized;
+		return $this;
+	}
+	
+	
 	
 }

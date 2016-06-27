@@ -1,5 +1,10 @@
 StingerSoft\DoctrineEntitySearchBundle\Entity\Field:
   type: entity
+  inheritanceType: SINGLE_TABLE
+  discriminatorColumn:
+    name: discr
+    type: string
+    length: 255
   id:
     id:
       type: integer
@@ -9,8 +14,12 @@ StingerSoft\DoctrineEntitySearchBundle\Entity\Field:
       type: string
       length: 512
       nullable: false
-    fieldValue: 
+    internalFieldValue:
+      column: fieldValue 
       type: text
+      nullable: false
+    serialized:
+      type: boolean
       nullable: false
   manyToOne:
     document:

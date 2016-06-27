@@ -113,16 +113,16 @@ class SearchService extends AbstractSearchService {
 	public function autocompleteOrm(EntityManager $em, $search, $maxResults = 10) {
 		$fieldRepos = $em->getRepository($this->fieldClazz);
 		$qb = $fieldRepos->createQueryBuilder('field');
-		$qb->select('field.fieldValue');
-		$qb->orWhere('field.fieldName = :titleFieldName AND field.fieldValue LIKE :term');
+		$qb->select('field.internalFieldValue');
+		$qb->orWhere('field.fieldName = :titleFieldName AND field.internalFieldValue LIKE :term');
 		$qb->setParameter('titleFieldName', \StingerSoft\EntitySearchBundle\Model\Document::FIELD_TITLE);
-		$qb->orWhere('field.fieldName = :contentFieldName AND field.fieldValue LIKE :term');
+		$qb->orWhere('field.fieldName = :contentFieldName AND field.internalFieldValue LIKE :term');
 		$qb->setParameter('contentFieldName', \StingerSoft\EntitySearchBundle\Model\Document::FIELD_CONTENT);
-		$qb->setParameter('term', $search . '%');
+		$qb->setParameter('term', '%'.$search . '%');
 		$iterator = $qb->getQuery()->iterate(null, \Doctrine\ORM\Query::HYDRATE_SCALAR);
 		$suggestions = array();
 		foreach($iterator as $res) {
-			$suggestions = array_merge($suggestions, array_filter(explode(' ', $res[0]['fieldValue']), function ($word) use ($search) {
+			$suggestions = array_merge($suggestions, array_filter(explode(' ', strip_tags($res[0]['internalFieldValue'])), function ($word) use ($search) {
 				return stripos($word, $search) === 0;
 			}));
 		}
@@ -151,7 +151,7 @@ class SearchService extends AbstractSearchService {
 		$qb = $docRepos->createQueryBuilder('doc');
 		$qb->leftJoin('doc.internalFields', 'field');
 		foreach(self::$searchableFields as $field) {
-			$qb->orWhere('field.fieldName = :' . $field . 'FieldName AND field.fieldValue LIKE :term');
+			$qb->orWhere('field.fieldName = :' . $field . 'FieldName AND field.internalFieldValue LIKE :term');
 			$qb->setParameter($field . 'FieldName', $field);
 		}
 		$qb->setParameter('term', '%' . $term . '%');
@@ -162,7 +162,7 @@ class SearchService extends AbstractSearchService {
 			foreach($query->getFacets() as $facetField => $facetValues) {
 				if($facetValues === null || count($facetValues) == 0)
 					continue;
-				$facetedQb->andWhere('field.fieldName = :' . $facetField . 'FacetFieldName AND field.fieldValue IN :' . $facetValues . 'FacetFieldValues');
+				$facetedQb->andWhere('field.fieldName = :' . $facetField . 'FacetFieldName AND field.internalFieldValue IN :' . $facetValues . 'FacetFieldValues');
 				$qb->setParameter($facetField . 'FacetFieldName', $facetField);
 				$qb->setParameter($facetField . 'FacetFieldValues', $facetValues);
 			}
@@ -173,10 +173,10 @@ class SearchService extends AbstractSearchService {
 		
 		$facetQb = clone $qb;
 		$facetQb->select('field.fieldName');
-		$facetQb->addSelect('field.fieldValue');
+		$facetQb->addSelect('field.internalFieldValue');
 		$facetQb->addSelect('COUNT(doc.id) as resultCount');
 		$facetQb->addGroupBy('field.fieldName');
-		$facetQb->addGroupBy('field.fieldValue');
+		$facetQb->addGroupBy('field.internalFieldValue');
 		$facetQb->orderBy('resultCount', 'DESC');
 		
 		if($query->getUsedFacets() !== null) {
@@ -187,7 +187,7 @@ class SearchService extends AbstractSearchService {
 		$facetSet = new FacetSetAdapter();
 		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0) {
 			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-				$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['fieldValue'], $facetResult['resultCount']);
+				$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['internalFieldValue'], $facetResult['resultCount']);
 			}
 			
 			if($query->getUsedFacets() === null || in_array('type', $query->getUsedFacets())) {
