@@ -19,15 +19,17 @@ use StingerSoft\EntitySearchBundle\Model\Query;
 use StingerSoft\EntitySearchBundle\Services\AbstractSearchService;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
+use Doctrine\ORM\QueryBuilder;
+use StingerSoft\EntitySearchBundle\Model\Result\FacetSet;
 
 class SearchService extends AbstractSearchService {
 	
 	use ContainerAwareTrait;
 
 	const BATCH_SIZE = 50;
-	
+
 	protected static $highlightStartTag = '<em>';
-	
+
 	protected static $highlightEndTag = '</em>';
 
 	protected $documentClazz = null;
@@ -122,7 +124,7 @@ class SearchService extends AbstractSearchService {
 		$qb->setParameter('titleFieldName', \StingerSoft\EntitySearchBundle\Model\Document::FIELD_TITLE);
 		$qb->orWhere('field.fieldName = :contentFieldName AND field.internalFieldValue LIKE :term');
 		$qb->setParameter('contentFieldName', \StingerSoft\EntitySearchBundle\Model\Document::FIELD_CONTENT);
-		$qb->setParameter('term', '%'.$search . '%');
+		$qb->setParameter('term', '%' . $search . '%');
 		$iterator = $qb->getQuery()->iterate(null, \Doctrine\ORM\Query::HYDRATE_SCALAR);
 		$suggestions = array();
 		foreach($iterator as $res) {
@@ -149,7 +151,7 @@ class SearchService extends AbstractSearchService {
 		return null;
 	}
 
-	protected function searchOrm(Query $query, EntityManager $em) {
+	protected function createBasicSearchOrmQuery(Query $query, EntityManager $em) {
 		$term = $query->getSearchTerm();
 		$docRepos = $em->getRepository($this->documentClazz);
 		$qb = $docRepos->createQueryBuilder('doc');
@@ -160,55 +162,97 @@ class SearchService extends AbstractSearchService {
 		}
 		$qb->setParameter('term', '%' . $term . '%');
 		$qb->distinct();
-		
-		$facetedQb = clone $qb;
+		return $qb;
+	}
+
+	protected function createFacetedOrmQuery(QueryBuilder $qb, Query $query, EntityManager $em) {
+		$docRepos = $em->getRepository($this->documentClazz);
+		$facetedQb = $docRepos->createQueryBuilder('facetDoc');
+		$facetedQb->leftJoin('facetDoc.internalFields', 'facetField');
 		if($query->getFacets() !== null && count($query->getFacets()) > 0) {
 			foreach($query->getFacets() as $facetField => $facetValues) {
 				if($facetValues === null || count($facetValues) == 0)
 					continue;
-				$facetedQb->andWhere('field.fieldName = :' . $facetField . 'FacetFieldName AND field.internalFieldValue IN :' . $facetValues . 'FacetFieldValues');
-				$qb->setParameter($facetField . 'FacetFieldName', $facetField);
-				$qb->setParameter($facetField . 'FacetFieldValues', $facetValues);
-			}
-		}
-		
-		$result = new KnpResultSet($facetedQb, $term);
-		$result->setContainer($this->container);
-		
-		$facetQb = clone $qb;
-		$facetQb->select('field.fieldName');
-		$facetQb->addSelect('field.internalFieldValue');
-		$facetQb->addSelect('COUNT(doc.id) as resultCount');
-		$facetQb->addGroupBy('field.fieldName');
-		$facetQb->addGroupBy('field.internalFieldValue');
-		$facetQb->orderBy('resultCount', 'DESC');
-		
-		if($query->getUsedFacets() !== null) {
-			$facetQb->andWhere('field.fieldName IN (:fields)');
-			$facetQb->setParameter('fields', $query->getUsedFacets());
-		}
-		
-		$facetSet = new FacetSetAdapter();
-		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0) {
-			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-				$facetSet->addFacetValue($facetResult['fieldName'], $facetResult['internalFieldValue'], $facetResult['resultCount']);
-			}
-			
-			if($query->getUsedFacets() === null || in_array('type', $query->getUsedFacets())) {
-				$facetQb = clone $qb;
-				$facetQb->select('doc.entityClass');
-				$facetQb->addSelect('COUNT(doc.id) as resultCount');
-				$facetQb->addGroupBy('doc.entityClass');
-				$facetQb->orderBy('resultCount', 'DESC');
 				
-				foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-					$facetSet->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
+				if($facetField == \StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE) {
+					$facetedQb->andWhere('facetDoc.entityClass in (:clazzes)');
+					$facetedQb->setParameter('clazzes', $facetValues);
+				} else {
+					$facetedQb->andWhere('(facetField.fieldName = :' . $facetField . 'FacetFieldName AND facetField.internalFieldValue IN (:' . $facetField . 'FacetFieldValues))');
+					$facetedQb->setParameter($facetField . 'FacetFieldName', $facetField);
+					$facetedQb->setParameter($facetField . 'FacetFieldValues', $facetValues);
 				}
 			}
 		}
+		$this->addResultIdInPart($facetedQb, $query, $em);
+		return $facetedQb;
+	}
+
+	protected function fetchTypeFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em) {
+		if($query->getUsedFacets() === null || in_array(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE, $query->getUsedFacets())) {
+			$docRepos = $em->getRepository($this->documentClazz);
+			$facetQb = $docRepos->createQueryBuilder('facetDoc');
+			$facetQb->select('facetDoc.entityClass');
+			$facetQb->addSelect('COUNT(DISTINCT facetDoc.id) as resultCount');
+			$facetQb->addGroupBy('facetDoc.entityClass');
+			$facetQb->orderBy('resultCount', 'DESC');
+			$this->addResultIdInPart($facetQb, $query, $em);
+			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
+				$facets->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
+			}
+			
+		}
+	}
+	
+	protected function fetchCommonFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em) {
+		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0) {
+			$docRepos = $em->getRepository($this->documentClazz);
+			$facetQb = $docRepos->createQueryBuilder('facetDoc');
+			$facetQb->leftJoin('facetDoc.internalFields', 'facetField');
+			$facetQb->select('facetField.fieldName');
+			$facetQb->addSelect('facetField.internalFieldValue');
+			$facetQb->addSelect('COUNT(facetDoc.id) as resultCount');
+			$facetQb->addGroupBy('facetField.fieldName');
+			$facetQb->addGroupBy('facetField.internalFieldValue');
+			$facetQb->orderBy('resultCount', 'DESC');
+			
+			if($query->getUsedFacets() !== null) {
+				$facetQb->andWhere('facetField.fieldName IN (:facetFields)');
+				$facetQb->setParameter('facetFields', $query->getUsedFacets());
+			}
+			$this->addResultIdInPart($facetQb, $query, $em);
+			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
+				$facets->addFacetValue($facetResult['fieldName'], $facetResult['internalFieldValue'], $facetResult['resultCount']);
+			}
+		}
+	}
+
+	protected function addResultIdInPart(QueryBuilder $queryToAdd, Query $query, EntityManager $em, $docAlias = 'facetDoc') {
+		$inQuery = $this->createBasicSearchOrmQuery($query, $em);
+		$inQuery->select('doc.id');
+		$queryToAdd->andWhere($queryToAdd->expr()->in($docAlias.'.id', $inQuery->getQuery()->getDQL()));
+		
+		foreach(self::$searchableFields as $field) {
+			$queryToAdd->setParameter($field . 'FieldName', $field);
+		}
+		$queryToAdd->setParameter('term', '%' . $query->getSearchTerm() . '%');
+	}
+
+	protected function searchOrm(Query $query, EntityManager $em) {
+		// Simple Like query
+		$qb = $this->createBasicSearchOrmQuery($query, $em);
+		
+		// Adds facets if available
+		$facetedQb = $this->createFacetedOrmQuery($qb, $query, $em);
+	
+		$result = new KnpResultSet($facetedQb, $query->getSearchTerm());
+		$result->setContainer($this->container);
+		
+		$facetSet = new FacetSetAdapter();
+		$this->fetchTypeFacetsFromOrmQuery($facetSet, $query, $em);
+		$this->fetchCommonFacetsFromOrmQuery($facetSet, $query, $em);
 		
 		$result->setFacets($facetSet);
-		
 		
 		return $result;
 	}

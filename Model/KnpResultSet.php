@@ -24,7 +24,7 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	use ContainerAwareTrait;
 
 	protected $query = null;
-	
+
 	protected $term = null;
 
 	/**
@@ -71,7 +71,9 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\ResultSet::getExcerpt()
 	 */
-	public function getExcerpt(Document $document) {
-		return Utils::highlight(Utils::excerpt($document->getFieldValue(BaseDocument::FIELD_CONTENT), $this->term), $this->term);
+	public function getExcerpt(BaseDocument $document) {
+		$content = $document->getFieldValue(BaseDocument::FIELD_CONTENT);
+		$content = !is_array($content) ? $content : implode(' ', $content);
+		return Utils::highlight(Utils::excerpt($content, $this->term), $this->term);
 	}
 }
