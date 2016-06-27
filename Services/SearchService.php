@@ -25,6 +25,10 @@ class SearchService extends AbstractSearchService {
 	use ContainerAwareTrait;
 
 	const BATCH_SIZE = 50;
+	
+	protected static $highlightStartTag = '<em>';
+	
+	protected static $highlightEndTag = '</em>';
 
 	protected $documentClazz = null;
 
@@ -168,7 +172,7 @@ class SearchService extends AbstractSearchService {
 			}
 		}
 		
-		$result = new KnpResultSet($facetedQb);
+		$result = new KnpResultSet($facetedQb, $term);
 		$result->setContainer($this->container);
 		
 		$facetQb = clone $qb;
@@ -204,6 +208,8 @@ class SearchService extends AbstractSearchService {
 		}
 		
 		$result->setFacets($facetSet);
+		
+		
 		return $result;
 	}
 

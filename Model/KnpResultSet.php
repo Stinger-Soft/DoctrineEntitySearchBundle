@@ -16,19 +16,24 @@ use Doctrine\ORM\QueryBuilder;
 use StingerSoft\EntitySearchBundle\Model\PaginatableResultSet;
 use StingerSoft\EntitySearchBundle\Model\ResultSetAdapter;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use StingerSoft\PhpCommons\String\Utils;
+use StingerSoft\EntitySearchBundle\Model\Document as BaseDocument;
 
 class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	
 	use ContainerAwareTrait;
 
 	protected $query = null;
+	
+	protected $term = null;
 
 	/**
 	 *
 	 * @param Query|QueryBuilder $items        	
 	 */
-	public function __construct($items) {
+	public function __construct($items, $term) {
 		$this->query = $items;
+		$this->term = $term;
 	}
 
 	/**
@@ -43,18 +48,30 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	}
 
 	/**
+	 *
 	 * {@inheritDoc}
+	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\ResultSetAdapter::getResults()
 	 */
 	public function getResults($offset = 0, $limit = null) {
 		$query = null;
-		if($this->query instanceof QueryBuilder){
+		if($this->query instanceof QueryBuilder) {
 			$query = $this->query->getQuery();
-		}else{
+		} else {
 			$query = clone $this->query;
 		}
 		$query->setFirstResult($offset);
 		$query->setMaxResults($limit);
 		return $query->getResult();
+	}
+
+	/**
+	 *
+	 * {@inheritDoc}
+	 *
+	 * @see \StingerSoft\EntitySearchBundle\Model\ResultSet::getExcerpt()
+	 */
+	public function getExcerpt(Document $document) {
+		return Utils::highlight(Utils::excerpt($document->getFieldValue(BaseDocument::FIELD_CONTENT), $this->term), $this->term);
 	}
 }
