@@ -125,7 +125,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$query = $this->getMockBuilder(Query::class)->setMethods(array(
 			'getSearchTerm' 
 		))->disableOriginalConstructor()->getMock();
-		$query->expects($this->once())->method('getSearchTerm')->will($this->returnValue('Beck'));
+		$query->method('getSearchTerm')->will($this->returnValue('Beck'));
 		$result = $service->search($query);
 		$this->assertCount(3, $result->getResults());
 		

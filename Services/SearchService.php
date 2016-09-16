@@ -12,15 +12,15 @@
 namespace StingerSoft\DoctrineEntitySearchBundle\Services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\QueryBuilder;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Document;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Field;
 use StingerSoft\DoctrineEntitySearchBundle\Model\KnpResultSet;
 use StingerSoft\EntitySearchBundle\Model\Query;
+use StingerSoft\EntitySearchBundle\Model\Result\FacetSet;
+use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
 use StingerSoft\EntitySearchBundle\Services\AbstractSearchService;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
-use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
-use Doctrine\ORM\QueryBuilder;
-use StingerSoft\EntitySearchBundle\Model\Result\FacetSet;
 
 class SearchService extends AbstractSearchService {
 	
