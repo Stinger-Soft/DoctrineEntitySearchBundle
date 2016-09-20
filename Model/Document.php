@@ -45,7 +45,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::addField()
 	 */
@@ -65,7 +65,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFields()
 	 */
@@ -77,9 +77,12 @@ abstract class Document implements BaseDocument {
 				if(is_array($oldValue)) {
 					$result[$field->getFieldName()][] = $field->getFieldValue();
 				} else if(is_scalar($oldValue)) {
-					$result[$field->getFieldName()] = array($oldValue, $field->getFieldValue());
+					$result[$field->getFieldName()] = array(
+						$oldValue,
+						$field->getFieldValue() 
+					);
 				}
-			}else{
+			} else {
 				$result[$field->getFieldName()] = $field->getFieldValue();
 			}
 		}
@@ -88,22 +91,31 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFieldValue()
 	 */
 	public function getFieldValue($fieldName) {
+		$result = array();
 		foreach($this->internalFields as $field) {
 			if($field->getFieldName() == $fieldName) {
-				return $field->getFieldValue();
+				$result[] = $field->getFieldValue();
 			}
+		}
+		switch(count($result)) {
+			case 0:
+				return null;
+			case 1:
+				return $result[0];
+			default:
+				return $result;
 		}
 		return null;
 	}
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::addMultiValueField()
 	 */
@@ -117,7 +129,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setFile()
 	 */
@@ -133,7 +145,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityClass()
 	 */
@@ -143,7 +155,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setEntityClass()
 	 */
@@ -154,7 +166,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityId()
 	 */
@@ -164,7 +176,7 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setEntityId()
 	 */
@@ -176,11 +188,11 @@ abstract class Document implements BaseDocument {
 	public function getInternalEntityId() {
 		return $this->entityId;
 	}
-	
+
 	public function __get($name) {
 		return $this->getFieldValue($name);
 	}
-	
+
 	public function __isset($name) {
 		return $this->getFieldValue($name) !== null;
 	}
