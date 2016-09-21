@@ -21,6 +21,7 @@ use StingerSoft\EntitySearchBundle\Model\Result\FacetSet;
 use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
 use StingerSoft\EntitySearchBundle\Services\AbstractSearchService;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Doctrine\Common\Util\ClassUtils;
 
 class SearchService extends AbstractSearchService {
 	
@@ -77,8 +78,12 @@ class SearchService extends AbstractSearchService {
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::saveDocument()
 	 */
 	public function saveDocument(\StingerSoft\EntitySearchBundle\Model\Document $document) {
+		$this->removeDocument($document);
+		/**
+		 * @var EntityManager $om
+		 */
+		$om = $this->getObjectManager();
 		$this->getObjectManager()->persist($document);
-		$this->getObjectManager()->flush();
 	}
 
 	/**
@@ -97,7 +102,6 @@ class SearchService extends AbstractSearchService {
 		));
 		if($realDoc) {
 			$this->getObjectManager()->remove($realDoc);
-			$this->getObjectManager()->flush();
 		}
 	}
 
