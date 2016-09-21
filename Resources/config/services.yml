@@ -10,3 +10,5 @@ services:
     arguments:
       - '%stinger_soft.doctrine_entity_search.document.class%'
       - '%stinger_soft.doctrine_entity_search.field.class%'
+    calls:
+      - [setContainer, ['@service_container']]

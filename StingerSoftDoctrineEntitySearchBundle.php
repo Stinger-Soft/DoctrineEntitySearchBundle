@@ -12,7 +12,7 @@
 namespace StingerSoft\DoctrineEntitySearchBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
-use StingerSoft\DoctrineEntitySearchBundle\StingerSoftEntitySearchBundle;
+use StingerSoft\EntitySearchBundle\StingerSoftEntitySearchBundle;
 
 /**
  */
