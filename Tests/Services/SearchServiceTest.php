@@ -69,6 +69,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$this->assertEquals($this->indexCount, $service->getIndexSize());
 		$beer->indexEntity($document);
 		$service->saveDocument($document);
+		$this->em->flush();
 		$this->assertEquals(++$this->indexCount, $service->getIndexSize());
 		return array(
 			$beer,
@@ -92,6 +93,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$document = $service->createEmptyDocumentFromEntity($car);
 		$this->assertEquals(0, $service->getIndexSize());
 		$service->saveDocument($document);
+		$this->em->flush();
 		
 		$this->assertEquals(1, $service->getIndexSize());
 		
@@ -104,6 +106,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$result = $this->indexBeer($service);
 		
 		$service->removeDocument($result[1]);
+		$this->em->flush();
 		$this->assertEquals(0, $service->getIndexSize());
 	}
 
