@@ -53,7 +53,7 @@ class SearchService extends AbstractSearchService {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::clearIndex()
 	 */
@@ -73,22 +73,27 @@ class SearchService extends AbstractSearchService {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::saveDocument()
 	 */
 	public function saveDocument(\StingerSoft\EntitySearchBundle\Model\Document $document) {
 		$this->removeDocument($document);
 		/**
+		 *
 		 * @var EntityManager $om
 		 */
 		$om = $this->getObjectManager();
 		$this->getObjectManager()->persist($document);
+		$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($document)), $document);
+		foreach($document->getInternalFields() as $field) {
+			$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($field)), $field);
+		}
 	}
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::removeDocument()
 	 */
@@ -107,7 +112,7 @@ class SearchService extends AbstractSearchService {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::autocomplete()
 	 */
@@ -142,7 +147,7 @@ class SearchService extends AbstractSearchService {
 
 	/**
 	 *
-	 * {@inheritDoc}
+	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::search()
 	 */
@@ -204,10 +209,9 @@ class SearchService extends AbstractSearchService {
 			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
 				$facets->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
 			}
-			
 		}
 	}
-	
+
 	protected function fetchCommonFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em) {
 		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0) {
 			$docRepos = $em->getRepository($this->documentClazz);
@@ -234,7 +238,7 @@ class SearchService extends AbstractSearchService {
 	protected function addResultIdInPart(QueryBuilder $queryToAdd, Query $query, EntityManager $em, $docAlias = 'facetDoc') {
 		$inQuery = $this->createBasicSearchOrmQuery($query, $em);
 		$inQuery->select('doc.id');
-		$queryToAdd->andWhere($queryToAdd->expr()->in($docAlias.'.id', $inQuery->getQuery()->getDQL()));
+		$queryToAdd->andWhere($queryToAdd->expr()->in($docAlias . '.id', $inQuery->getQuery()->getDQL()));
 		
 		foreach(self::$searchableFields as $field) {
 			$queryToAdd->setParameter($field . 'FieldName', $field);
@@ -248,7 +252,7 @@ class SearchService extends AbstractSearchService {
 		
 		// Adds facets if available
 		$facetedQb = $this->createFacetedOrmQuery($qb, $query, $em);
-	
+		
 		$result = new KnpResultSet($facetedQb, $query->getSearchTerm());
 		$result->setContainer($this->container);
 		

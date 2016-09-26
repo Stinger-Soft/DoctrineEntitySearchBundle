@@ -128,6 +128,15 @@ abstract class Document implements BaseDocument {
 	}
 
 	/**
+	 * Returns the internal field representation
+	 *
+	 * @return Field[]
+	 */
+	public function getInternalFields() {
+		return $this->internalFields;
+	}
+
+	/**
 	 *
 	 * {@inheritdoc}
 	 *
