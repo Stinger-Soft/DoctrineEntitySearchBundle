@@ -64,7 +64,7 @@ class SearchService extends AbstractSearchService {
 			$this->getObjectManager()->remove($doc);
 			if(($i % self::BATCH_SIZE) === 0) {
 				$this->getObjectManager()->flush();
-				$this->getObjectManager()->clear();
+// 				$this->getObjectManager()->clear();
 			}
 			++$i;
 		}
