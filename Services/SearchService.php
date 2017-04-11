@@ -184,7 +184,7 @@ class SearchService extends AbstractSearchService {
 					continue;
 				
 				if($facetField == \StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE) {
-					$facetedQb->andWhere('facetDoc.entityClass in (:clazzes)');
+					$facetedQb->andWhere('facetDoc.entityType in (:clazzes)');
 					$facetedQb->setParameter('clazzes', $facetValues);
 				} else {
 					$facetedQb->andWhere('(facetField.fieldName = :' . $facetField . 'FacetFieldName AND facetField.internalFieldValue IN (:' . $facetField . 'FacetFieldValues))');
@@ -201,13 +201,13 @@ class SearchService extends AbstractSearchService {
 		if($query->getUsedFacets() === null || in_array(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE, $query->getUsedFacets())) {
 			$docRepos = $em->getRepository($this->documentClazz);
 			$facetQb = $docRepos->createQueryBuilder('facetDoc');
-			$facetQb->select('facetDoc.entityClass');
+			$facetQb->select('facetDoc.entityType');
 			$facetQb->addSelect('COUNT(DISTINCT facetDoc.id) as resultCount');
-			$facetQb->addGroupBy('facetDoc.entityClass');
+			$facetQb->addGroupBy('facetDoc.entityType');
 			$facetQb->orderBy('resultCount', 'DESC');
 			$this->addResultIdInPart($facetQb, $query, $em);
 			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-				$facets->addFacetValue('type', $facetResult['entityClass'], $facetResult['resultCount']);
+				$facets->addFacetValue('type', $facetResult['entityType'], $facetResult['resultCount']);
 			}
 		}
 	}

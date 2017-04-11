@@ -7,7 +7,7 @@
 
 
 	<testsuites>
-		<testsuite name="EntitySearch Test Suite">
+		<testsuite name="Doctrine EntitySearch Test Suite">
 			<directory>./Tests</directory>
 		</testsuite>
 	</testsuites>

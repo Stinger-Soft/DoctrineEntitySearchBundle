@@ -29,6 +29,12 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
+	 * @var string
+	 */
+	protected $entityType = null;
+
+	/**
+	 *
 	 * @var mixed
 	 */
 	protected $entityId = null;
@@ -170,7 +176,30 @@ abstract class Document implements BaseDocument {
 	 */
 	public function setEntityClass($entityClass) {
 		$this->entityClass = $entityClass;
+		if(!$this->entityType) {
+			$this->entityType = $entityClass;
+		}
 		return $this;
+	}
+
+	/**
+	 *
+	 * {@inheritdoc}
+	 *
+	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setEntityType()
+	 */
+	public function setEntityType($type) {
+		$this->entityType = $type;
+	}
+	
+	/**
+	 *
+	 * {@inheritdoc}
+	 *
+	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityType()
+	 */
+	public function getEntityType() {
+		return $this->entityType ? $this->entityType : $this->getEntityClass();
 	}
 
 	/**
