@@ -243,7 +243,12 @@ abstract class Document implements BaseDocument {
 	}
 
 	public function __isset($name) {
-		return $this->getFieldValue($name) !== null;
+		foreach($this->internalFields as $field) {
+			if($field->getFieldName() == $name) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

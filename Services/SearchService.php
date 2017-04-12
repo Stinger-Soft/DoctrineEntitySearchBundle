@@ -58,17 +58,12 @@ class SearchService extends AbstractSearchService {
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::clearIndex()
 	 */
 	public function clearIndex() {
-		$docs = $this->getObjectManager()->getRepository($this->documentClazz)->findAll();
-		$i = 0;
-		foreach($docs as $doc) {
-			$this->getObjectManager()->remove($doc);
-			if(($i % self::BATCH_SIZE) === 0) {
-				$this->getObjectManager()->flush();
-// 				$this->getObjectManager()->clear();
-			}
-			++$i;
-		}
-		$this->getObjectManager()->flush();
+		$em = $this->getObjectManager();
+		$q = $em->createQuery('delete from '.$this->fieldClazz);
+		$q->execute();
+		
+		$q = $em->createQuery('delete from '.$this->documentClazz);
+		$q->execute();
 	}
 
 	/**
