@@ -151,6 +151,17 @@ abstract class Document implements BaseDocument {
 	public function setFile($path) {
 		// Not supported
 	}
+	
+	/**
+	 *
+	 * {@inheritdoc}
+	 *
+	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFile()
+	 */
+	public function getFile() {
+		// Not supported
+		return null;
+	}
 
 	/**
 	 */
