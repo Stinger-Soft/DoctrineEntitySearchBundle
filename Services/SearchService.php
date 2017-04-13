@@ -59,10 +59,10 @@ class SearchService extends AbstractSearchService {
 	 */
 	public function clearIndex() {
 		$em = $this->getObjectManager();
-		$q = $em->createQuery('delete from '.$this->fieldClazz);
+		$q = $em->createQuery('delete from ' . $this->fieldClazz);
 		$q->execute();
 		
-		$q = $em->createQuery('delete from '.$this->documentClazz);
+		$q = $em->createQuery('delete from ' . $this->documentClazz);
 		$q->execute();
 	}
 
@@ -132,11 +132,17 @@ class SearchService extends AbstractSearchService {
 		$iterator = $qb->getQuery()->iterate(null, \Doctrine\ORM\Query::HYDRATE_SCALAR);
 		$suggestions = array();
 		foreach($iterator as $res) {
+			//TODO remove whitespaces and some useless chars: .,;<>"+
 			$suggestions = array_merge($suggestions, array_filter(explode(' ', strip_tags($res[0]['internalFieldValue'])), function ($word) use ($search) {
 				return stripos($word, $search) === 0;
 			}));
+			//TODO use phpcommons Utils:removeDuplicatesByComparator -> Version 1.1
+			$suggestions = array_unique($suggestions);
+			if(count($suggestions) > $maxResults) {
+				break;
+			}
 		}
-		$suggestions = array_unique($suggestions);
+		
 		return array_slice($suggestions, 0, $maxResults);
 	}
 
