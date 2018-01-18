@@ -27,4 +27,4 @@ StingerSoft\DoctrineEntitySearchBundle\Entity\Document:
       targetEntity: StingerSoft\DoctrineEntitySearchBundle\Entity\Field
       mappedBy: document
       fetch: EAGER
-      cascade: ['persist', 'remove', 'merge']
+      cascade: ['persist', 'remove', 'merge', 'detach']

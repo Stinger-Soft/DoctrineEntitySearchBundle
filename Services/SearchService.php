@@ -79,6 +79,12 @@ class SearchService extends AbstractSearchService {
 		 * @var EntityManager $om
 		 */
 		$om = $this->getObjectManager();
+		foreach($om->getUnitOfWork()->getScheduledEntityInsertions() as $entity) {
+			if($entity instanceof \StingerSoft\EntitySearchBundle\Model\Document && $entity->getEntityClass() == $document->getEntityClass() && $entity->getEntityId() == $document->getEntityId()) {
+				$om->detach($entity);
+			}
+		}
+		
 		$this->getObjectManager()->persist($document);
 		$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($document)), $document);
 		foreach($document->getInternalFields() as $field) {
