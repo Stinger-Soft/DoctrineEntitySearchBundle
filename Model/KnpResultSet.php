@@ -74,6 +74,7 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	public function getExcerpt(BaseDocument $document) {
 		$content = $document->getFieldValue(BaseDocument::FIELD_CONTENT);
 		$content = !is_array($content) ? $content : implode(' ', $content);
+		if($content === null) return null;
 		return Utils::highlight(Utils::excerpt($content, $this->term), $this->term);
 	}
 }
