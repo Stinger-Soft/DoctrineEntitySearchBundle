@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of the Stinger Entity Search package.
@@ -30,11 +31,11 @@ abstract class Field {
 		return $this->id;
 	}
 
-	public function getFieldName() {
+	public function getFieldName() : string {
 		return $this->fieldName;
 	}
 
-	public function setFieldName($fieldName) {
+	public function setFieldName(string $fieldName) {
 		$this->fieldName = $fieldName;
 		return $this;
 	}

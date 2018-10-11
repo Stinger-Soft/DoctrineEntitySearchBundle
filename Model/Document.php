@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of the Stinger Entity Search package.
@@ -9,10 +10,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\Model;
 
-use StingerSoft\EntitySearchBundle\Model\Document as BaseDocument;
 use Doctrine\Common\Collections\ArrayCollection;
+use StingerSoft\EntitySearchBundle\Model\Document as BaseDocument;
 
 /**
  * Backend independent document implementation
@@ -55,16 +57,16 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::addField()
 	 */
-	public function addField($fieldname, $value) {
+	public function addField(string $fieldName, $value): void {
 		foreach($this->internalFields as $field) {
-			if($field->getFieldName() == $fieldname) {
+			if($field->getFieldName() === $fieldName) {
 				$field->setFieldValue($value);
 				return;
 			}
 		}
 		$field = $this->newFieldInstance();
 		$field->setFieldValue($value);
-		$field->setFieldName($fieldname);
+		$field->setFieldName($fieldName);
 		$this->internalFields[] = $field;
 		$field->setDocument($this);
 	}
@@ -75,7 +77,7 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFields()
 	 */
-	public function getFields() {
+	public function getFields(): array {
 		$result = array();
 		foreach($this->internalFields as $field) {
 			if(isset($result[$field->getFieldName()])) {
@@ -85,7 +87,7 @@ abstract class Document implements BaseDocument {
 				} else if(is_scalar($oldValue)) {
 					$result[$field->getFieldName()] = array(
 						$oldValue,
-						$field->getFieldValue() 
+						$field->getFieldValue()
 					);
 				}
 			} else {
@@ -101,10 +103,10 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFieldValue()
 	 */
-	public function getFieldValue($fieldName) {
+	public function getFieldValue(string $fieldName) {
 		$result = array();
 		foreach($this->internalFields as $field) {
-			if($field->getFieldName() == $fieldName) {
+			if($field->getFieldName() === $fieldName) {
 				$result[] = $field->getFieldValue();
 			}
 		}
@@ -125,7 +127,7 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::addMultiValueField()
 	 */
-	public function addMultiValueField($fieldName, $value) {
+	public function addMultiValueField($fieldName, $value): void {
 		$field = $this->newFieldInstance();
 		$field->setFieldValue($value);
 		$field->setFieldName($fieldName);
@@ -138,8 +140,8 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @return Field[]
 	 */
-	public function getInternalFields() {
-		return $this->internalFields;
+	public function getInternalFields(): array {
+		return \is_array($this->internalFields) ? $this->internalFields : $this->internalFields->toArray();
 	}
 
 	/**
@@ -148,17 +150,17 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setFile()
 	 */
-	public function setFile($path) {
+	public function setFile(string $path): void {
 		// Not supported
 	}
-	
+
 	/**
 	 *
 	 * {@inheritdoc}
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getFile()
 	 */
-	public function getFile() {
+	public function getFile(): ?string {
 		// Not supported
 		return null;
 	}
@@ -175,7 +177,7 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityClass()
 	 */
-	public function getEntityClass() {
+	public function getEntityClass(): string {
 		return $this->entityClass;
 	}
 
@@ -185,12 +187,21 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setEntityClass()
 	 */
-	public function setEntityClass($entityClass) {
+	public function setEntityClass(string $entityClass): void {
 		$this->entityClass = $entityClass;
 		if(!$this->entityType) {
 			$this->entityType = $entityClass;
 		}
-		return $this;
+	}
+
+	/**
+	 *
+	 * {@inheritdoc}
+	 *
+	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityType()
+	 */
+	public function getEntityType(): string {
+		return $this->entityType ?: $this->getEntityClass();
 	}
 
 	/**
@@ -199,18 +210,8 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setEntityType()
 	 */
-	public function setEntityType($type) {
+	public function setEntityType(string $type): void {
 		$this->entityType = $type;
-	}
-	
-	/**
-	 *
-	 * {@inheritdoc}
-	 *
-	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityType()
-	 */
-	public function getEntityType() {
-		return $this->entityType ? $this->entityType : $this->getEntityClass();
 	}
 
 	/**
@@ -220,7 +221,7 @@ abstract class Document implements BaseDocument {
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::getEntityId()
 	 */
 	public function getEntityId() {
-		return json_decode($this->entityId);
+		return \json_decode($this->entityId);
 	}
 
 	/**
@@ -229,22 +230,21 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::setEntityId()
 	 */
-	public function setEntityId($entityId) {
+	public function setEntityId($entityId): void {
 		$this->entityId = json_encode($entityId);
-		return $this;
 	}
 
 	public function getInternalEntityId() {
 		return $this->entityId;
 	}
 
-	public function __get($name) {
+	public function __get(string $name) {
 		return $this->getFieldValue($name);
 	}
 
-	public function __isset($name) {
+	public function __isset(string $name): bool {
 		foreach($this->internalFields as $field) {
-			if($field->getFieldName() == $name) {
+			if($field->getFieldName() === $name) {
 				return true;
 			}
 		}
@@ -256,5 +256,5 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @return Field
 	 */
-	protected abstract function newFieldInstance();
+	protected abstract function newFieldInstance(): Field;
 }
