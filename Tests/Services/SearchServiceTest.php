@@ -11,19 +11,19 @@
  */
 namespace StingerSoft\DoctrineEntitySearchBundle\Tests\Services;
 
-use StingerSoft\EntitySearchBundle\Tests\AbstractORMTestCase;
-use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
-use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Car;
-use StingerSoft\EntitySearchBundle\Services\SearchService;
-use StingerSoft\EntitySearchBundle\Model\Query;
-use Symfony\Component\DependencyInjection\Container;
+use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\SimplifiedYamlDriver;
 use Knp\Component\Pager\Paginator;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Document;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Field;
-use Doctrine\ORM\Mapping\Driver\YamlDriver;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
-use Doctrine\ORM\Mapping\Driver\SimplifiedYamlDriver;
+use StingerSoft\EntitySearchBundle\Model\Query;
 use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
+use StingerSoft\EntitySearchBundle\Services\SearchService;
+use StingerSoft\EntitySearchBundle\Tests\AbstractORMTestCase;
+use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
+use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Car;
+use Symfony\Component\DependencyInjection\Container;
 
 class SearchServiceTest extends AbstractORMTestCase {
 
@@ -45,19 +45,13 @@ class SearchServiceTest extends AbstractORMTestCase {
 	 *
 	 * @return \StingerSoft\DoctrineEntitySearchBundle\Services\SearchService
 	 */
-	protected function getSearchService() {
-		$service = new \StingerSoft\DoctrineEntitySearchBundle\Services\SearchService();
-		$service->setObjectManager($this->em);
-		$service->setContainer($this->getMockContainer());
+	protected function getSearchService(EntityManager $em = null) {
+		$service = new \StingerSoft\DoctrineEntitySearchBundle\Services\SearchService( new Paginator());
+		$service->setObjectManager($em ?? $this->getMockSqliteEntityManager());
 		return $service;
 	}
 	
-	protected function getMockContainer(){
-		$container = new Container();
-		$container->set('knp_paginator', new Paginator());
-		return $container;
-	}
-	
+
 
 	protected function indexBeer(SearchService $service, $title = 'Hemelinger') {
 		$beer = new Beer();
@@ -78,7 +72,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 	}
 
 	public function testSaveDocument() {
-		$service = $this->getSearchService();
+		$service = $this->getSearchService($this->em);
 		$this->indexBeer($service);
 		$service->clearIndex();
 		$this->assertEquals(0, $service->getIndexSize());
@@ -89,7 +83,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$this->em->persist($car);
 		$this->em->flush();
 		
-		$service = $this->getSearchService();
+		$service = $this->getSearchService($this->em);
 		$document = $service->createEmptyDocumentFromEntity($car);
 		$this->assertEquals(0, $service->getIndexSize());
 		$service->saveDocument($document);
@@ -102,7 +96,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 	}
 
 	public function testRemoveDocument() {
-		$service = $this->getSearchService();
+		$service = $this->getSearchService($this->em);
 		$result = $this->indexBeer($service);
 		
 		$service->removeDocument($result[1]);
@@ -111,7 +105,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 	}
 
 	public function testAutocompletion() {
-		$service = $this->getSearchService();
+		$service = $this->getSearchService($this->em);
 		$result = $this->indexBeer($service);
 		
 		$suggests = $service->autocomplete('He');
@@ -120,14 +114,14 @@ class SearchServiceTest extends AbstractORMTestCase {
 	}
 
 	public function testSearch() {
-		$service = $this->getSearchService();
+		$service = $this->getSearchService($this->em);
 		$this->indexBeer($service);
 		$this->indexBeer($service, 'Haake Beck');
 		$this->indexBeer($service, 'Haake Beck');
 		$this->indexBeer($service, 'Haake Beck Kräusen');
 		$query = $this->getMockBuilder(Query::class)->setMethods(array(
 			'getSearchTerm' 
-		))->disableOriginalConstructor()->getMock();
+		))->getMock();
 		$query->method('getSearchTerm')->will($this->returnValue('Beck'));
 		$result = $service->search($query);
 		$this->assertCount(3, $result->getResults());
@@ -140,8 +134,8 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$this->assertCount(2, $titleFacets);
 		$this->assertArrayHasKey('Haake Beck', $titleFacets);
 		$this->assertArrayHasKey('Haake Beck Kräusen', $titleFacets);
-		$this->assertEquals($titleFacets['Haake Beck'], 2);
-		$this->assertEquals($titleFacets['Haake Beck Kräusen'], 1);
+		$this->assertEquals($titleFacets['Haake Beck']['count'], 2);
+		$this->assertEquals($titleFacets['Haake Beck Kräusen']['count'], 1);
 		$typeFacets = $facets->getFacet(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE);
 		$this->assertCount(1, $typeFacets);
 		

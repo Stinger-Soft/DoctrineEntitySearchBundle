@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of the Stinger Entity Search package.
@@ -9,46 +10,37 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\Services;
 
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\QueryBuilder;
+use Knp\Component\Pager\PaginatorInterface;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Document;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Field;
 use StingerSoft\DoctrineEntitySearchBundle\Model\KnpResultSet;
 use StingerSoft\EntitySearchBundle\Model\Query;
 use StingerSoft\EntitySearchBundle\Model\Result\FacetSet;
 use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
+use StingerSoft\EntitySearchBundle\Model\ResultSet;
 use StingerSoft\EntitySearchBundle\Services\AbstractSearchService;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
-use Doctrine\Common\Util\ClassUtils;
 
 class SearchService extends AbstractSearchService {
-	
-	use ContainerAwareTrait;
 
 	const BATCH_SIZE = 50;
-
-	protected static $highlightStartTag = '<em>';
-
-	protected static $highlightEndTag = '</em>';
-
-	protected $documentClazz = null;
-
-	protected $fieldClazz = null;
-
 	public static $searchableFields = array(
 		\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TITLE,
-		\StingerSoft\EntitySearchBundle\Model\Document::FIELD_CONTENT 
+		\StingerSoft\EntitySearchBundle\Model\Document::FIELD_CONTENT
 	);
+	protected $documentClazz = null;
+	protected $fieldClazz = null;
+	protected $paginator;
 
-	public function __construct($documentClazz = Document::class, $fieldClazz = Field::class) {
+	public function __construct(PaginatorInterface $paginator, $documentClazz = Document::class, $fieldClazz = Field::class) {
 		$this->documentClazz = $documentClazz;
 		$this->fieldClazz = $fieldClazz;
-	}
-
-	protected function newDocumentInstance() {
-		return new $this->documentClazz();
+		$this->paginator = $paginator;
 	}
 
 	/**
@@ -57,11 +49,11 @@ class SearchService extends AbstractSearchService {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::clearIndex()
 	 */
-	public function clearIndex() {
+	public function clearIndex(): void {
 		$em = $this->getObjectManager();
 		$q = $em->createQuery('delete from ' . $this->fieldClazz);
 		$q->execute();
-		
+
 		$q = $em->createQuery('delete from ' . $this->documentClazz);
 		$q->execute();
 	}
@@ -72,7 +64,7 @@ class SearchService extends AbstractSearchService {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::saveDocument()
 	 */
-	public function saveDocument(\StingerSoft\EntitySearchBundle\Model\Document $document) {
+	public function saveDocument(\StingerSoft\EntitySearchBundle\Model\Document $document): void {
 		$this->removeDocument($document);
 		/**
 		 *
@@ -80,11 +72,11 @@ class SearchService extends AbstractSearchService {
 		 */
 		$om = $this->getObjectManager();
 		foreach($om->getUnitOfWork()->getScheduledEntityInsertions() as $entity) {
-			if($entity instanceof \StingerSoft\EntitySearchBundle\Model\Document && $entity->getEntityClass() == $document->getEntityClass() && $entity->getEntityId() == $document->getEntityId()) {
+			if($entity instanceof \StingerSoft\EntitySearchBundle\Model\Document && $entity->getEntityClass() === $document->getEntityClass() && $entity->getEntityId() === $document->getEntityId()) {
 				$om->detach($entity);
 			}
 		}
-		
+
 		$this->getObjectManager()->persist($document);
 		$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($document)), $document);
 		foreach($document->getInternalFields() as $field) {
@@ -98,13 +90,13 @@ class SearchService extends AbstractSearchService {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::removeDocument()
 	 */
-	public function removeDocument(\StingerSoft\EntitySearchBundle\Model\Document $document) {
+	public function removeDocument(\StingerSoft\EntitySearchBundle\Model\Document $document): void {
 		if(!($document instanceof \StingerSoft\DoctrineEntitySearchBundle\Model\Document)) {
-			throw new \InvalidArgumentException(sprintf('Given document is of class %, expected %s'), get_class($document), $this->documentClazz);
+			throw new \InvalidArgumentException(sprintf('Given document is of class %s, expected %s', get_class($document), $this->documentClazz));
 		}
 		$realDoc = $this->getObjectManager()->getRepository($this->documentClazz)->findOneBy(array(
-			'entityId' => $document->getInternalEntityId(),
-			'entityClass' => $document->getEntityClass() 
+			'entityId'    => $document->getInternalEntityId(),
+			'entityClass' => $document->getEntityClass()
 		));
 		if($realDoc) {
 			$this->getObjectManager()->remove($realDoc);
@@ -117,7 +109,7 @@ class SearchService extends AbstractSearchService {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::autocomplete()
 	 */
-	public function autocomplete($search, $maxResults = 10) {
+	public function autocomplete($search, $maxResults = 10): array {
 		$om = $this->getObjectManager();
 		if($om instanceof EntityManager) {
 			return $this->autocompleteOrm($om, $search, $maxResults);
@@ -126,7 +118,7 @@ class SearchService extends AbstractSearchService {
 		return array();
 	}
 
-	public function autocompleteOrm(EntityManager $em, $search, $maxResults = 10) {
+	public function autocompleteOrm(EntityManager $em, $search, $maxResults = 10): array {
 		$fieldRepos = $em->getRepository($this->fieldClazz);
 		$qb = $fieldRepos->createQueryBuilder('field');
 		$qb->select('field.internalFieldValue');
@@ -139,7 +131,7 @@ class SearchService extends AbstractSearchService {
 		$suggestions = array();
 		foreach($iterator as $res) {
 			//TODO remove whitespaces and some useless chars: .,;<>"+
-			$suggestions = array_merge($suggestions, array_filter(explode(' ', strip_tags($res[0]['internalFieldValue'])), function ($word) use ($search) {
+			$suggestions = array_merge($suggestions, array_filter(explode(' ', strip_tags($res[0]['internalFieldValue'])), function($word) use ($search) {
 				return stripos($word, $search) === 0;
 			}));
 			//TODO use phpcommons Utils:removeDuplicatesByComparator -> Version 1.1
@@ -148,7 +140,7 @@ class SearchService extends AbstractSearchService {
 				break;
 			}
 		}
-		
+
 		return array_slice($suggestions, 0, $maxResults);
 	}
 
@@ -158,7 +150,7 @@ class SearchService extends AbstractSearchService {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Services\SearchService::search()
 	 */
-	public function search(Query $query) {
+	public function search(Query $query): ?ResultSet {
 		$om = $this->getObjectManager();
 		if($om instanceof EntityManager) {
 			return $this->searchOrm($query, $om);
@@ -167,7 +159,22 @@ class SearchService extends AbstractSearchService {
 		return null;
 	}
 
-	protected function createBasicSearchOrmQuery(Query $query, EntityManager $em) {
+	public function getIndexSize(): int {
+		$om = $this->getObjectManager();
+		if($om instanceof EntityManager) {
+			$docRepos = $om->getRepository($this->documentClazz);
+			$qb = $docRepos->createQueryBuilder('doc');
+			$qb->select('count(doc)');
+			return (int)$qb->getQuery()->getSingleScalarResult();
+		}
+		return 0;
+	}
+
+	protected function newDocumentInstance(): \StingerSoft\EntitySearchBundle\Model\Document {
+		return new $this->documentClazz();
+	}
+
+	protected function createBasicSearchOrmQuery(Query $query, EntityManager $em): QueryBuilder {
 		$term = $query->getSearchTerm();
 		$docRepos = $em->getRepository($this->documentClazz);
 		$qb = $docRepos->createQueryBuilder('doc');
@@ -181,15 +188,15 @@ class SearchService extends AbstractSearchService {
 		return $qb;
 	}
 
-	protected function createFacetedOrmQuery(QueryBuilder $qb, Query $query, EntityManager $em) {
+	protected function createFacetedOrmQuery(QueryBuilder $qb, Query $query, EntityManager $em): QueryBuilder {
 		$docRepos = $em->getRepository($this->documentClazz);
 		$facetedQb = $docRepos->createQueryBuilder('facetDoc');
 		$facetedQb->leftJoin('facetDoc.internalFields', 'facetField');
-		if($query->getFacets() !== null && count($query->getFacets()) > 0) {
+		if(count($query->getFacets()) > 0) {
 			foreach($query->getFacets() as $facetField => $facetValues) {
 				if($facetValues === null || count($facetValues) == 0)
 					continue;
-				
+
 				if($facetField == \StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE) {
 					$facetedQb->andWhere('facetDoc.entityType in (:clazzes)');
 					$facetedQb->setParameter('clazzes', $facetValues);
@@ -204,7 +211,7 @@ class SearchService extends AbstractSearchService {
 		return $facetedQb;
 	}
 
-	protected function fetchTypeFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em) {
+	protected function fetchTypeFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em): void {
 		if($query->getUsedFacets() === null || in_array(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE, $query->getUsedFacets())) {
 			$docRepos = $em->getRepository($this->documentClazz);
 			$facetQb = $docRepos->createQueryBuilder('facetDoc');
@@ -214,72 +221,62 @@ class SearchService extends AbstractSearchService {
 			$facetQb->orderBy('resultCount', 'DESC');
 			$this->addResultIdInPart($facetQb, $query, $em);
 			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-				$facets->addFacetValue('type', $facetResult['entityType'], $facetResult['resultCount']);
+				$facets->addFacetValue('type', $facetResult['entityType'], $facetResult['entityType'], (int)$facetResult['resultCount']);
 			}
 		}
 	}
 
-	protected function fetchCommonFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em) {
+	protected function fetchCommonFacetsFromOrmQuery(FacetSet $facets, Query $query, EntityManager $em): void {
 		if($query->getUsedFacets() === null || count($query->getUsedFacets()) > 0) {
 			$docRepos = $em->getRepository($this->documentClazz);
 			$facetQb = $docRepos->createQueryBuilder('facetDoc');
 			$facetQb->leftJoin('facetDoc.internalFields', 'facetField');
 			$facetQb->select('facetField.fieldName');
 			$facetQb->addSelect('facetField.internalFieldValue');
+			$facetQb->addSelect('facetField.serialized');
 			$facetQb->addSelect('COUNT(facetDoc.id) as resultCount');
 			$facetQb->addGroupBy('facetField.fieldName');
+			$facetQb->addGroupBy('facetField.serialized');
 			$facetQb->addGroupBy('facetField.internalFieldValue');
 			$facetQb->orderBy('resultCount', 'DESC');
-			
+
 			if($query->getUsedFacets() !== null) {
 				$facetQb->andWhere('facetField.fieldName IN (:facetFields)');
 				$facetQb->setParameter('facetFields', $query->getUsedFacets());
 			}
 			$this->addResultIdInPart($facetQb, $query, $em);
 			foreach($facetQb->getQuery()->getScalarResult() as $facetResult) {
-				$facets->addFacetValue($facetResult['fieldName'], $facetResult['internalFieldValue'], $facetResult['resultCount']);
+				$facets->addFacetValue($facetResult['fieldName'], $facetResult['internalFieldValue'], $facetResult['serialized'] ? \unserialize($facetResult['internalFieldValue']) : $facetResult['internalFieldValue'], (int)$facetResult['resultCount']);
 			}
 		}
 	}
 
-	protected function addResultIdInPart(QueryBuilder $queryToAdd, Query $query, EntityManager $em, $docAlias = 'facetDoc') {
+	protected function addResultIdInPart(QueryBuilder $queryToAdd, Query $query, EntityManager $em, $docAlias = 'facetDoc'): void {
 		$inQuery = $this->createBasicSearchOrmQuery($query, $em);
 		$inQuery->select('doc.id');
 		$queryToAdd->andWhere($queryToAdd->expr()->in($docAlias . '.id', $inQuery->getQuery()->getDQL()));
-		
+
 		foreach(self::$searchableFields as $field) {
 			$queryToAdd->setParameter($field . 'FieldName', $field);
 		}
 		$queryToAdd->setParameter('term', '%' . $query->getSearchTerm() . '%');
 	}
 
-	protected function searchOrm(Query $query, EntityManager $em) {
+	protected function searchOrm(Query $query, EntityManager $em): ResultSet {
 		// Simple Like query
 		$qb = $this->createBasicSearchOrmQuery($query, $em);
-		
+
 		// Adds facets if available
 		$facetedQb = $this->createFacetedOrmQuery($qb, $query, $em);
-		
-		$result = new KnpResultSet($facetedQb, $query->getSearchTerm());
-		$result->setContainer($this->container);
-		
+
+		$result = new KnpResultSet($this->paginator, $facetedQb, $query->getSearchTerm());
+
 		$facetSet = new FacetSetAdapter();
 		$this->fetchTypeFacetsFromOrmQuery($facetSet, $query, $em);
 		$this->fetchCommonFacetsFromOrmQuery($facetSet, $query, $em);
-		
-		$result->setFacets($facetSet);
-		
-		return $result;
-	}
 
-	public function getIndexSize() {
-		$om = $this->getObjectManager();
-		if($om instanceof EntityManager) {
-			$docRepos = $om->getRepository($this->documentClazz);
-			$qb = $docRepos->createQueryBuilder('doc');
-			$qb->select('count(doc)');
-			return $qb->getQuery()->getSingleScalarResult();
-		}
-		return 0;
+		$result->setFacets($facetSet);
+
+		return $result;
 	}
 }

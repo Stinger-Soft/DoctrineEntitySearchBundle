@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of the Stinger Entity Search package.
@@ -9,6 +10,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -26,12 +28,12 @@ class Configuration implements ConfigurationInterface {
 	 * {@inheritDoc}
 	 *
 	 */
-	public function getConfigTreeBuilder() {
+	public function getConfigTreeBuilder(): TreeBuilder {
 		$treeBuilder = new TreeBuilder();
 		$treeBuilder->root('stinger_soft_doctrine_entity_search');
 		// @formatter:off
 		// @formatter:on
-		
+
 		return $treeBuilder;
 	}
 }

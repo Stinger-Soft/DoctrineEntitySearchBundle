@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of the Stinger Entity Search package.
@@ -9,31 +10,34 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\Model;
 
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
+use Knp\Component\Pager\Pagination\PaginationInterface;
+use Knp\Component\Pager\PaginatorInterface;
+use StingerSoft\EntitySearchBundle\Model\Document as BaseDocument;
 use StingerSoft\EntitySearchBundle\Model\PaginatableResultSet;
 use StingerSoft\EntitySearchBundle\Model\ResultSetAdapter;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use StingerSoft\PhpCommons\String\Utils;
-use StingerSoft\EntitySearchBundle\Model\Document as BaseDocument;
 
 class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
-	
-	use ContainerAwareTrait;
 
 	protected $query = null;
 
 	protected $term = null;
 
+	protected $paginator;
+
 	/**
 	 *
-	 * @param Query|QueryBuilder $items        	
+	 * @param Query|QueryBuilder $items
 	 */
-	public function __construct($items, $term) {
+	public function __construct(PaginatorInterface $paginator, $items, $term) {
 		$this->query = $items;
 		$this->term = $term;
+		$this->paginator = $paginator;
 	}
 
 	/**
@@ -42,9 +46,8 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\PaginatableResultSet::paginate()
 	 */
-	public function paginate($page = 1, $limit = 10, array $options = array()) {
-		$paginator = $this->container->get('knp_paginator');
-		return $paginator->paginate($this->query, $page, $limit, $options);
+	public function paginate(int $page = 1, int $limit = 10, array $options = array()): PaginationInterface {
+		return $this->paginator->paginate($this->query, $page, $limit, $options);
 	}
 
 	/**
@@ -53,7 +56,7 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\ResultSetAdapter::getResults()
 	 */
-	public function getResults($offset = 0, $limit = null) {
+	public function getResults(int $offset = 0, int $limit = null): array {
 		$query = null;
 		if($this->query instanceof QueryBuilder) {
 			$query = $this->query->getQuery();
@@ -71,10 +74,12 @@ class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\ResultSet::getExcerpt()
 	 */
-	public function getExcerpt(BaseDocument $document) {
+	public function getExcerpt(BaseDocument $document): ?string {
 		$content = $document->getFieldValue(BaseDocument::FIELD_CONTENT);
-		$content = !is_array($content) ? $content : implode(' ', $content);
-		if($content === null) return null;
+		$content = !\is_array($content) ? $content : implode(' ', $content);
+		if($content === null) {
+			return null;
+		}
 		return Utils::highlight(Utils::excerpt($content, $this->term), $this->term);
 	}
 }

@@ -14,7 +14,7 @@ namespace StingerSoft\DoctrineEntitySearchBundle\Tests\Model;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Document;
 use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
 
-class DocumentTest extends \PHPUnit_Framework_TestCase {
+class DocumentTest extends \PHPUnit\Framework\TestCase {
 
 	public function testAddFields() {
 		$doc = new Document();

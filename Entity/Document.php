@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of the Stinger Entity Search package.
@@ -9,13 +10,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\Entity;
 
 use StingerSoft\DoctrineEntitySearchBundle\Model\Document as BaseDocument;
 
 class Document extends BaseDocument {
-	
-	protected function newFieldInstance(){
+
+	protected function newFieldInstance(): \StingerSoft\DoctrineEntitySearchBundle\Model\Field {
 		return new Field();
 	}
 }
