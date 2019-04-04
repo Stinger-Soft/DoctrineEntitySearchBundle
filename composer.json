@@ -23,7 +23,7 @@
 	"license" : "Apache-2.0",
 	"require" : {
 		"php" : ">=7.2",
-		"stinger-soft/entity-search-bundle" : "~1.0@dev",
+		"stinger-soft/entity-search-bundle" : "~1.0",
 		"knplabs/knp-paginator-bundle" : "~2.5",
 		"stinger-soft/php-commons" : "^1.0.0"
 	},
@@ -37,7 +37,7 @@
 	},
 	"extra" : {
 		"branch-alias" : {
-			"dev-master" : "0.1.x-dev",
+			"dev-master" : "1.0.x-dev",
 			"dev-develop" : "1.1.x-dev"
 		}
 	}
