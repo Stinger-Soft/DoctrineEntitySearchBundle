@@ -15,6 +15,7 @@ namespace StingerSoft\DoctrineEntitySearchBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * This is the class that validates and merges configuration from your app/config files
@@ -29,8 +30,14 @@ class Configuration implements ConfigurationInterface {
 	 *
 	 */
 	public function getConfigTreeBuilder(): TreeBuilder {
-		$treeBuilder = new TreeBuilder();
-		$treeBuilder->root('stinger_soft_doctrine_entity_search');
+		$configName = 'stinger_soft_doctrine_entity_search';
+		if(Kernel::VERSION_ID < 40300) {
+			$treeBuilder = new TreeBuilder();
+			// $rootNode = $treeBuilder->root($configName);
+		} else {
+			$treeBuilder = new TreeBuilder($configName);
+			// $rootNode = $treeBuilder->getRootNode();
+		}	
 		// @formatter:off
 		// @formatter:on
 
