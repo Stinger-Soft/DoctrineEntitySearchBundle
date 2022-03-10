@@ -30,17 +30,6 @@ class Configuration implements ConfigurationInterface {
 	 *
 	 */
 	public function getConfigTreeBuilder(): TreeBuilder {
-		$configName = 'stinger_soft_doctrine_entity_search';
-		if(Kernel::VERSION_ID < 40300) {
-			$treeBuilder = new TreeBuilder();
-			// $rootNode = $treeBuilder->root($configName);
-		} else {
-			$treeBuilder = new TreeBuilder($configName);
-			// $rootNode = $treeBuilder->getRootNode();
-		}	
-		// @formatter:off
-		// @formatter:on
-
-		return $treeBuilder;
+		return new TreeBuilder('stinger_soft_doctrine_entity_search');
 	}
 }

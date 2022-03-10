@@ -5,6 +5,9 @@
 	processIsolation="false" stopOnFailure="false"
 	bootstrap="./Tests/bootstrap.php">
 
+	<php>
+		<env name="SYMFONY_DEPRECATIONS_HELPER" value="weak" />
+	</php>
 
 	<testsuites>
 		<testsuite name="Doctrine EntitySearch Test Suite">
