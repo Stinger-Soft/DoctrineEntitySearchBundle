@@ -9,26 +9,28 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\Tests\Model;
 
+use PHPUnit\Framework\TestCase;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Document;
 use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
 
-class DocumentTest extends \PHPUnit\Framework\TestCase {
+class DocumentTest extends TestCase {
 
-	public function testAddFields() {
+	public function testAddFields(): void {
 		$doc = new Document();
-		
+
 		$doc->setEntityClass(Beer::class);
 		$doc->setEntityId(1);
 		$doc->addField(Document::FIELD_AUTHOR, 'florian_meyer');
 		$doc->addMultiValueField(Document::FIELD_EDITORS, 'florian_meyer');
 		$doc->addMultiValueField(Document::FIELD_EDITORS, 'oliver_kotte');
 		$doc->setFile('~/test.txt');
-		
+
 		$this->assertEquals(Beer::class, $doc->getEntityClass());
 		$this->assertEquals(1, $doc->getEntityId());
-		
+
 		$fields = $doc->getFields();
 		$this->assertArrayHasKey(Document::FIELD_AUTHOR, $fields);
 		$this->assertNotNull($doc->getFieldValue(Document::FIELD_AUTHOR));

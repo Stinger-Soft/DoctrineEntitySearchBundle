@@ -9,9 +9,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace StingerSoft\DoctrineEntitySearchBundle\Tests\Services;
 
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
+use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\Driver\SimplifiedYamlDriver;
 use Knp\Component\Pager\Paginator;
@@ -23,11 +24,10 @@ use StingerSoft\EntitySearchBundle\Services\SearchService;
 use StingerSoft\EntitySearchBundle\Tests\AbstractORMTestCase;
 use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
 use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Car;
-use Symfony\Component\DependencyInjection\Container;
 
 class SearchServiceTest extends AbstractORMTestCase {
 
-	protected $indexCount = 0;
+	protected int $indexCount = 0;
 
 	/**
 	 *
@@ -35,7 +35,7 @@ class SearchServiceTest extends AbstractORMTestCase {
 	 *
 	 * @see PHPUnit_Framework_TestCase::setUp()
 	 */
-	public function setUp() {
+	public function setUp(): void {
 		parent::setUp();
 		$this->getMockSqliteEntityManager();
 		$this->indexCount = 0;
@@ -45,20 +45,20 @@ class SearchServiceTest extends AbstractORMTestCase {
 	 *
 	 * @return \StingerSoft\DoctrineEntitySearchBundle\Services\SearchService
 	 */
-	protected function getSearchService(EntityManager $em = null) {
-		$service = new \StingerSoft\DoctrineEntitySearchBundle\Services\SearchService( new Paginator());
+	protected function getSearchService(EntityManager $em = null): SearchService {
+		$dispatcher = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcherInterface')->getMock();
+		$service = new \StingerSoft\DoctrineEntitySearchBundle\Services\SearchService(new Paginator($dispatcher));
 		$service->setObjectManager($em ?? $this->getMockSqliteEntityManager());
 		return $service;
 	}
-	
 
 
-	protected function indexBeer(SearchService $service, $title = 'Hemelinger') {
+	protected function indexBeer(SearchService $service, $title = 'Hemelinger'): array {
 		$beer = new Beer();
 		$beer->setTitle($title);
 		$this->em->persist($beer);
 		$this->em->flush();
-		
+
 		$document = $service->createEmptyDocumentFromEntity($beer);
 		$this->assertEquals($this->indexCount, $service->getIndexSize());
 		$beer->indexEntity($document);
@@ -67,65 +67,65 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$this->assertEquals(++$this->indexCount, $service->getIndexSize());
 		return array(
 			$beer,
-			$document 
+			$document
 		);
 	}
 
-	public function testSaveDocument() {
+	public function testSaveDocument(): void {
 		$service = $this->getSearchService($this->em);
 		$this->indexBeer($service);
 		$service->clearIndex();
 		$this->assertEquals(0, $service->getIndexSize());
 	}
 
-	public function testSaveDocumentComposite() {
+	public function testSaveDocumentComposite(): void {
 		$car = new Car('S500', 2016);
 		$this->em->persist($car);
 		$this->em->flush();
-		
+
 		$service = $this->getSearchService($this->em);
 		$document = $service->createEmptyDocumentFromEntity($car);
 		$this->assertEquals(0, $service->getIndexSize());
 		$service->saveDocument($document);
 		$this->em->flush();
-		
+
 		$this->assertEquals(1, $service->getIndexSize());
-		
+
 		$service->clearIndex();
 		$this->assertEquals(0, $service->getIndexSize());
 	}
 
-	public function testRemoveDocument() {
+	public function testRemoveDocument(): void {
 		$service = $this->getSearchService($this->em);
 		$result = $this->indexBeer($service);
-		
+
 		$service->removeDocument($result[1]);
 		$this->em->flush();
 		$this->assertEquals(0, $service->getIndexSize());
 	}
 
-	public function testAutocompletion() {
+	public function testAutocompletion(): void {
 		$service = $this->getSearchService($this->em);
 		$result = $this->indexBeer($service);
-		
+
 		$suggests = $service->autocomplete('He');
 		$this->assertCount(1, $suggests);
 		$this->assertContains($result[0]->getTitle(), $suggests);
 	}
 
-	public function testSearch() {
+	public function testSearch(): void {
 		$service = $this->getSearchService($this->em);
 		$this->indexBeer($service);
 		$this->indexBeer($service, 'Haake Beck');
 		$this->indexBeer($service, 'Haake Beck');
 		$this->indexBeer($service, 'Haake Beck Kräusen');
 		$query = $this->getMockBuilder(Query::class)->setMethods(array(
-			'getSearchTerm' 
+			'getSearchTerm'
 		))->getMock();
 		$query->method('getSearchTerm')->will($this->returnValue('Beck'));
 		$result = $service->search($query);
 		$this->assertCount(3, $result->getResults());
-		
+
 		/**
 		 * @var FacetSetAdapter $facets
 		 */
@@ -134,11 +134,11 @@ class SearchServiceTest extends AbstractORMTestCase {
 		$this->assertCount(2, $titleFacets);
 		$this->assertArrayHasKey('Haake Beck', $titleFacets);
 		$this->assertArrayHasKey('Haake Beck Kräusen', $titleFacets);
-		$this->assertEquals($titleFacets['Haake Beck']['count'], 2);
-		$this->assertEquals($titleFacets['Haake Beck Kräusen']['count'], 1);
+		$this->assertEquals(2, $titleFacets['Haake Beck']['count']);
+		$this->assertEquals(1, $titleFacets['Haake Beck Kräusen']['count']);
 		$typeFacets = $facets->getFacet(\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TYPE);
 		$this->assertCount(1, $typeFacets);
-		
+
 	}
 
 	/**
@@ -155,20 +155,20 @@ class SearchServiceTest extends AbstractORMTestCase {
 			Field::class,
 		);
 	}
-	
-	protected function getMetadataDriverImplementation() {
+
+	protected function getMetadataDriverImplementation(): MappingDriverChain {
 		$driver = new MappingDriverChain();
 		$driver->setDefaultDriver(parent::getMetadataDriverImplementation());
 		$namespaces = array(
-			realpath(__DIR__.'/../../Resources/config/doctrine/') => 'StingerSoft\DoctrineEntitySearchBundle\Entity',
+			realpath(__DIR__ . '/../../Resources/config/doctrine/') => 'StingerSoft\DoctrineEntitySearchBundle\Entity',
 		);
-		
+
 		$yamlDriver = new SimplifiedYamlDriver($namespaces);
 		$driver->addDriver($yamlDriver, 'StingerSoft\DoctrineEntitySearchBundle');
 		return $driver;
 	}
-	
-	protected function getPaths(){
-		return array(realpath(__DIR__.'/../../Entity'));
+
+	protected function getPaths(): array {
+		return array(realpath(__DIR__ . '/../../Entity'));
 	}
 }

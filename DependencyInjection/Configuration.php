@@ -30,7 +30,5 @@ class Configuration implements ConfigurationInterface {
 	 */
 	public function getConfigTreeBuilder(): TreeBuilder {
 		return new TreeBuilder('stinger_soft_doctrine_entity_search');
-		// @formatter:off
-		// @formatter:on
 	}
 }

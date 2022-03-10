@@ -24,17 +24,20 @@ use StingerSoft\PhpCommons\String\Utils;
 
 class KnpResultSet extends ResultSetAdapter implements PaginatableResultSet {
 
+	/**
+	 * @var Query|QueryBuilder|null
+	 */
 	protected $query = null;
 
-	protected $term = null;
+	protected ?string $term = null;
 
-	protected $paginator;
+	protected PaginatorInterface $paginator;
 
 	/**
 	 *
 	 * @param Query|QueryBuilder $items
 	 */
-	public function __construct(PaginatorInterface $paginator, $items, $term) {
+	public function __construct(PaginatorInterface $paginator, $items, string $term = null) {
 		$this->query = $items;
 		$this->term = $term;
 		$this->paginator = $paginator;
