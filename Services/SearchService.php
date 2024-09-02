@@ -28,16 +28,20 @@ use StingerSoft\EntitySearchBundle\Services\AbstractSearchService;
 
 class SearchService extends AbstractSearchService {
 
-	const BATCH_SIZE = 50;
-	public static $searchableFields = array(
+	public const BATCH_SIZE = 50;
+
+	public static array $searchableFields = array(
 		\StingerSoft\EntitySearchBundle\Model\Document::FIELD_TITLE,
 		\StingerSoft\EntitySearchBundle\Model\Document::FIELD_CONTENT
 	);
-	protected $documentClazz = null;
-	protected $fieldClazz = null;
-	protected $paginator;
 
-	public function __construct(PaginatorInterface $paginator, $documentClazz = Document::class, $fieldClazz = Field::class) {
+	protected string $documentClazz;
+
+	protected string $fieldClazz;
+
+	protected PaginatorInterface $paginator;
+
+	public function __construct(PaginatorInterface $paginator, string $documentClazz = Document::class, string $fieldClazz = Field::class) {
 		$this->documentClazz = $documentClazz;
 		$this->fieldClazz = $fieldClazz;
 		$this->paginator = $paginator;
@@ -51,6 +55,9 @@ class SearchService extends AbstractSearchService {
 	 */
 	public function clearIndex(): void {
 		$em = $this->getObjectManager();
+		if($em === null) {
+			throw new \RuntimeException('No Object manager set for searchservice!');
+		}
 		$q = $em->createQuery('delete from ' . $this->fieldClazz);
 		$q->execute();
 
@@ -76,8 +83,11 @@ class SearchService extends AbstractSearchService {
 				$om->detach($entity);
 			}
 		}
-
-		$this->getObjectManager()->persist($document);
+		$em = $this->getObjectManager();
+		if($em === null) {
+			throw new \RuntimeException('No Object manager set for searchservice!');
+		}
+		$em->persist($document);
 		$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($document)), $document);
 		foreach($document->getInternalFields() as $field) {
 			$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($field)), $field);
@@ -94,12 +104,16 @@ class SearchService extends AbstractSearchService {
 		if(!($document instanceof \StingerSoft\DoctrineEntitySearchBundle\Model\Document)) {
 			throw new \InvalidArgumentException(sprintf('Given document is of class %s, expected %s', get_class($document), $this->documentClazz));
 		}
-		$realDoc = $this->getObjectManager()->getRepository($this->documentClazz)->findOneBy(array(
+		$em = $this->getObjectManager();
+		if($em === null) {
+			throw new \RuntimeException('No Object manager set for searchservice!');
+		}
+		$realDoc = $em->getRepository($this->documentClazz)->findOneBy(array(
 			'entityId'    => $document->getInternalEntityId(),
 			'entityClass' => $document->getEntityClass()
 		));
 		if($realDoc) {
-			$this->getObjectManager()->remove($realDoc);
+			$em->remove($realDoc);
 		}
 	}
 

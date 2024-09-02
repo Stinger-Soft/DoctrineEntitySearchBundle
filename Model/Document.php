@@ -25,15 +25,15 @@ abstract class Document implements BaseDocument {
 
 	/**
 	 *
-	 * @var string
+	 * @var string|null
 	 */
-	protected $entityClass = null;
+	protected ?string $entityClass = null;
 
 	/**
 	 *
-	 * @var string
+	 * @var string|null
 	 */
-	protected $entityType = null;
+	protected ?string $entityType = null;
 
 	/**
 	 *
@@ -118,7 +118,6 @@ abstract class Document implements BaseDocument {
 			default:
 				return $result;
 		}
-		return null;
 	}
 
 	/**
@@ -127,7 +126,7 @@ abstract class Document implements BaseDocument {
 	 *
 	 * @see \StingerSoft\EntitySearchBundle\Model\Document::addMultiValueField()
 	 */
-	public function addMultiValueField($fieldName, $value): void {
+	public function addMultiValueField(string $fieldName, $value): void {
 		$field = $this->newFieldInstance();
 		$field->setFieldValue($value);
 		$field->setFieldName($fieldName);

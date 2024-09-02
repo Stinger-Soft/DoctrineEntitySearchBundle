@@ -22,23 +22,25 @@
 	},
 	"license" : "Apache-2.0",
 	"require" : {
-		"php" : ">=7.2",
-		"stinger-soft/entity-search-bundle" : "~1.1@dev",
+		"php" : ">=7.4",
+		"stinger-soft/entity-search-bundle" : "^1.2@dev",
 		"knplabs/knp-paginator-bundle" : "^5.0",
 		"stinger-soft/php-commons" : "^1.0"
 	},
 	"require-dev" : {
-		"phpunit/phpunit" : "~7.3.5",
-		"php-coveralls/php-coveralls" : "~2.1.0",
-		"doctrine/orm" : ">=2.5.0",
-		"doctrine/common" : ">=2.5.0",
-		"symfony/validator" : "^3.4||^4.0||^5.0",
-		"symfony/phpunit-bridge" : "^3.4||^4.0||^5.0"
+		"phpunit/phpunit" : "^9.5",
+		"php-coveralls/php-coveralls" : "^2.5",
+		"symfony/phpunit-bridge" : "^5.0||^6.0"
 	},
 	"extra" : {
 		"branch-alias" : {
-			"dev-master" : "1.1.x-dev",
-			"dev-develop" : "1.2.x-dev"
+			"dev-master" : "1.2.x-dev",
+			"dev-develop" : "2.0.x-dev"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"ocramius/package-versions": false
 		}
 	}
 }
