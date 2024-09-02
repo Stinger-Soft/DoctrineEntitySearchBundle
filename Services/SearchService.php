@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace StingerSoft\DoctrineEntitySearchBundle\Services;
 
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\QueryBuilder;
 use Knp\Component\Pager\PaginatorInterface;
@@ -88,9 +87,9 @@ class SearchService extends AbstractSearchService {
 			throw new \RuntimeException('No Object manager set for searchservice!');
 		}
 		$em->persist($document);
-		$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($document)), $document);
+		$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(get_class($document)), $document);
 		foreach($document->getInternalFields() as $field) {
-			$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(ClassUtils::getClass($field)), $field);
+			$om->getUnitOfWork()->computeChangeSet($om->getClassMetadata(get_class($field)), $field);
 		}
 	}
 

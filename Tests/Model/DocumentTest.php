@@ -14,7 +14,7 @@ namespace StingerSoft\DoctrineEntitySearchBundle\Tests\Model;
 
 use PHPUnit\Framework\TestCase;
 use StingerSoft\DoctrineEntitySearchBundle\Entity\Document;
-use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
+use StingerSoft\EntitySearchBundle\Fixtures\ORM\Beer;
 
 class DocumentTest extends TestCase {
 

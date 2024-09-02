@@ -11,6 +11,6 @@ define('VENDOR_PATH', dirname(__DIR__) . '/vendor');
 $loader = require __DIR__.'/../vendor/autoload.php';
 
 
-AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
-$reader = new AnnotationReader();
-$_ENV['annotation_reader'] = $reader;
+//AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
+//$reader = new AnnotationReader();
+//$_ENV['annotation_reader'] = $reader;

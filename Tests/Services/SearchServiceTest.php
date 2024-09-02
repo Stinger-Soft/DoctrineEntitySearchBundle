@@ -21,9 +21,9 @@ use StingerSoft\DoctrineEntitySearchBundle\Entity\Field;
 use StingerSoft\EntitySearchBundle\Model\Query;
 use StingerSoft\EntitySearchBundle\Model\Result\FacetSetAdapter;
 use StingerSoft\EntitySearchBundle\Services\SearchService;
-use StingerSoft\EntitySearchBundle\Tests\AbstractORMTestCase;
-use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Beer;
-use StingerSoft\EntitySearchBundle\Tests\Fixtures\ORM\Car;
+use StingerSoft\EntitySearchBundle\AbstractORMTestCase;
+use StingerSoft\EntitySearchBundle\Fixtures\ORM\Beer;
+use StingerSoft\EntitySearchBundle\Fixtures\ORM\Car;
 
 class SearchServiceTest extends AbstractORMTestCase {
 

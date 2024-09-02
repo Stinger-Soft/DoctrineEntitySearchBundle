@@ -1,0 +1,15 @@
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="StingerSoft\DoctrineEntitySearchBundle\Entity\Field" inheritance-type="SINGLE_TABLE">
+        <discriminator-column name="discr" type="string" length="255"/>
+        <id name="id" type="integer" length="255">
+            <generator strategy="AUTO"/>
+        </id>
+        <field name="fieldName" type="string" length="255" nullable="false"/>
+        <field name="internalFieldValue" type="text" column="fieldValue" nullable="false"/>
+        <field name="serialized" type="boolean" nullable="false"/>
+        <many-to-one field="document" target-entity="StingerSoft\DoctrineEntitySearchBundle\Entity\Document" inversed-by="internalFields" fetch="EAGER"/>
+    </entity>
+</doctrine-mapping>
